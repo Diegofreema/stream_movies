@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -11,11 +12,23 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func DBInstance() *mongo.Client {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("Error loading .env file")
+func loadEnvFile() {
+	paths := []string{
+		".env",
+		filepath.Join("..", ".env"),
 	}
+
+	for _, path := range paths {
+		if err := godotenv.Load(path); err == nil {
+			return
+		}
+	}
+
+	log.Println("Error loading .env file: tried .env and ../.env")
+}
+
+func DBInstance() *mongo.Client {
+	loadEnvFile()
 
 	MongoDb := os.Getenv("MONGODB_URI")
 
@@ -23,6 +36,8 @@ func DBInstance() *mongo.Client {
 		log.Fatal("Mongo db uri not set")
 
 	}
+
+	fmt.Println(MongoDb)
 
 	clientOptions := options.Client().ApplyURI(MongoDb)
 
@@ -38,11 +53,7 @@ func DBInstance() *mongo.Client {
 var Client *mongo.Client = DBInstance()
 
 func OpenCollection(collectionName string) *mongo.Collection {
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("Error loading .env file")
-	}
+	loadEnvFile()
 
 	databaseName := os.Getenv("DATABASE_NAME")
 
