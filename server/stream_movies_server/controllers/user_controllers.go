@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/DiegoFreema/stream_movies/database"
 	"github.com/DiegoFreema/stream_movies/models"
+	"github.com/DiegoFreema/stream_movies/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -134,6 +136,7 @@ func LoginUser() gin.HandlerFunc {
 		err := userCollection.FindOne(ctx, bson.M{"email": userLogin.Email}).Decode(&foundUser)
 
 		if err != nil {
+			fmt.Println("Error finding user")
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error":   "Invalid email or password",
 				"success": false,
@@ -144,6 +147,7 @@ func LoginUser() gin.HandlerFunc {
 		isValid, err := VerifyPassword(foundUser.Password, userLogin.Password)
 
 		if err != nil {
+			fmt.Println("error validating password")
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error":   "Invalid email or password",
 				"success": false,
@@ -152,6 +156,7 @@ func LoginUser() gin.HandlerFunc {
 		}
 
 		if !isValid {
+			fmt.Println("Is not valid password")
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error":   "Invalid email or password",
 				"success": false,
@@ -159,5 +164,39 @@ func LoginUser() gin.HandlerFunc {
 			return
 		}
 
+		token, refreshToken, err := utils.GenerateAllTokens(foundUser.Email, foundUser.FirstName, foundUser.LastName, foundUser.Role, foundUser.UserID)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "Failed to generate tokens",
+				"success": false,
+			})
+			return
+		}
+
+		err = utils.UpdateAllTokens(foundUser.UserID, token, refreshToken)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "Failed to update tokens",
+				"success": false,
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "User logged in",
+			"user": models.UserResponse{
+				UserID:         foundUser.UserID,
+				Email:          foundUser.Email,
+				Role:           foundUser.Role,
+				FirstName:      foundUser.FirstName,
+				LastName:       foundUser.LastName,
+				Token:          token,
+				RefreshToken:   refreshToken,
+				FavoriteGenres: foundUser.FavoriteGenres,
+			},
+		})
 	}
 }

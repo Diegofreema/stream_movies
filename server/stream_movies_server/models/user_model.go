@@ -35,5 +35,7 @@ type UserResponse struct {
 	Role           string  `json:"role"`
 	FirstName      string  `json:"first_name"`
 	LastName       string  `json:"last_name"`
+	Token          string  `json:"token"`
+	RefreshToken   string  `json:"refresh_token"`
 	FavoriteGenres []Genre `json:"favorite_genres"`
 }
