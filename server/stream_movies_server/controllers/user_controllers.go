@@ -26,6 +26,16 @@ func HashPassword(password string) (string, error) {
 	return string(HashPassword), nil
 }
 
+func VerifyPassword(userPassword string, providedPassword string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(providedPassword))
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func RegisterUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -104,9 +114,50 @@ func RegisterUser() gin.HandlerFunc {
 	}
 }
 
+func LoginUser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var userLogin models.UserLogin
 
-func LoginUser() gin.HandlerFunc{
-	return func(c *gin.Context){
-		
+		if err := c.ShouldBindJSON(&userLogin); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "Invalid user data",
+				"success": false,
+			})
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+
+		defer cancel()
+
+		var foundUser models.User
+
+		err := userCollection.FindOne(ctx, bson.M{"email": userLogin.Email}).Decode(&foundUser)
+
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error":   "Invalid email or password",
+				"success": false,
+			})
+			return
+		}
+
+		isValid, err := VerifyPassword(foundUser.Password, userLogin.Password)
+
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error":   "Invalid email or password",
+				"success": false,
+			})
+			return
+		}
+
+		if !isValid {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error":   "Invalid email or password",
+				"success": false,
+			})
+			return
+		}
+
 	}
 }

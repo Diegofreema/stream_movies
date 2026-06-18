@@ -23,3 +23,17 @@ type User struct {
 
 	FavoriteGenres []Genre `bson:"favorite_genres" json:"favorite_genres" validate:"required,dive"`
 }
+
+type UserLogin struct {
+	Email    string `bson:"email" json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
+
+type UserResponse struct {
+	UserID         string  `json:"user_id"`
+	Email          string  `json:"email"`
+	Role           string  `json:"role"`
+	FirstName      string  `json:"first_name"`
+	LastName       string  `json:"last_name"`
+	FavoriteGenres []Genre `json:"favorite_genres"`
+}
