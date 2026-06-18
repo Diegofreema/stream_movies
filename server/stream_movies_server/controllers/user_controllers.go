@@ -16,7 +16,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var userCollection *mongo.Collection = database.OpenCollection("users")
+var userCollection *mongo.Collection = database.OpenCollection(database.UsersCollection)
 
 func HashPassword(password string) (string, error) {
 	HashPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

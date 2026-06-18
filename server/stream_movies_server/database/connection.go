@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func loadEnvFile() {
+func LoadEnvFile() {
 	paths := []string{
 		".env",
 		filepath.Join("..", ".env"),
@@ -28,7 +28,7 @@ func loadEnvFile() {
 }
 
 func DBInstance() *mongo.Client {
-	loadEnvFile()
+	LoadEnvFile()
 
 	MongoDb := os.Getenv("MONGODB_URI")
 
@@ -52,14 +52,25 @@ func DBInstance() *mongo.Client {
 
 var Client *mongo.Client = DBInstance()
 
-func OpenCollection(collectionName string) *mongo.Collection {
-	loadEnvFile()
+type CollectionName struct {
+	v string
+}
+
+var (
+	MoviesCollection  = CollectionName{"movies"}
+	UsersCollection   = CollectionName{"users"}
+	RankingCollection = CollectionName{"rankings"}
+	GenresCollection  = CollectionName{"genres"}
+)
+
+func OpenCollection(collectionName CollectionName) *mongo.Collection {
+	LoadEnvFile()
 
 	databaseName := os.Getenv("DATABASE_NAME")
 
 	fmt.Println(databaseName)
 
-	collection := Client.Database(databaseName).Collection(collectionName)
+	collection := Client.Database(databaseName).Collection(collectionName.v)
 
 	if collection == nil {
 		return nil
