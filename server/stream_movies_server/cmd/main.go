@@ -3,19 +3,15 @@ package main
 import (
 	"fmt"
 
-	"github.com/DiegoFreema/stream_movies/controllers"
+	"github.com/DiegoFreema/stream_movies/routes"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	router := gin.Default()
 
-	router.GET("/movies", controllers.GetMovies())
-	router.GET("/movies/:imdb_id", controllers.GetMovie())
-	router.POST("/movies", controllers.AddMovie())
-
-	router.POST("/auth/register", controllers.RegisterUser())
-	router.POST("/auth/login", controllers.LoginUser())
+	routes.SetUpUnProtectedRoute(router)
+	routes.SetUpProtectedRoute(router)
 	if err := router.Run(":8080"); err != nil {
 		fmt.Println("Failed to start server")
 		panic(err)
